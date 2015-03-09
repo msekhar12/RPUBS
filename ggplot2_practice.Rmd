@@ -1,0 +1,106 @@
+---
+title: "Week_6_Hands_on"
+author: "Sekhar Mekala"
+date: "Tuesday, March 03, 2015"
+output: html_document
+---
+
+First load the ggplot2 package. This package contains a datafram called "diamonds"
+
+```{r}
+#Install the package if needed, using the command:
+#install.packages("ggplot2")
+
+#Load the ggplot2 library
+library("ggplot2")
+```
+
+Let us display some sample data (top rows) of diamonds dataset, using the head function.
+
+```{r} 
+   head(diamonds)
+```
+
+To display which variables are numeric and which are categorical, use the "str" function of R
+
+```{r}
+str(diamonds)
+```
+
+Let us use the summary() function to display various high level characteristics of diamonds dataset variables. For categorical variables, various counts are displayed, and for numerical variables, Min, Max, 25th , 75th percentiles, mean, median are displayed
+```{r}
+summary(diamonds)
+```
+
+From the above display of diamond dataset, the "cut", "color", and "clarity" are non-numeric variables or factors, and the remaining are numeric variables
+
+To determine the frequency for each of the diamond colors
+
+```{r}
+table(diamonds$color)
+```
+
+To determine the frequency for each of the diamond cuts, by color
+
+```{r}
+table(diamonds$cut,diamonds$color)
+```
+
+To create a graph for a single numeric variable
+```{r}
+hist(diamonds$carat)
+```
+
+Create a scatterplot of two numeric variables
+```{r}
+plot(log(diamonds$price),log(diamonds$carat))
+```
+
+Let us play with ggplot2 options:
+```{r}
+ggplot(data=diamonds,aes(x=log(price),y=log(carat), color = color)) +
+     geom_point() +
+ geom_smooth(method="lm",color="black",linetype=1) + 
+  labs(title="Regression between log(price) and log(color)", x="log(price)",y="log(carat)")
+```
+
+Obtained the following code from [stackoverflow!] ("http://stackoverflow.com/questions/9681765/display-regression-equation-and-r2-for-each-scatter-plot-when-using-facet-wrap")
+
+The following command will produce the price box plots, for all the colors. The X variable must be a factor, and Y must be a numeric
+
+```{r}
+
+ggplot(diamonds, aes(x=color,y=price)) + geom_boxplot(fill="cornflowerblue",
+color="black", notch=TRUE)
+
+ggplot(diamonds, aes(x=color,y=price)) + geom_boxplot(fill="cornflowerblue",
+color="black", notch=TRUE) +
+geom_point(position="jitter", color="blue", alpha=.5)+
+geom_rug(side="l", color="black")  
+```
+
+The following command produces a density graph, for various colors of diamonds. The x must be the numeric variable = price, and Y the color
+
+```{r}
+ggplot(data=diamonds, aes(x=price, fill=color)) +
+geom_density(alpha=.3)
+```
+
+The diamonds data set is having lots of entries, so let us use a different data set, to demonstrate other graphics.
+We will use the Salaries data set, which is obtained by installing the "car" package. Use the following R Command, to install car package (Uncomment the code):
+
+```{r}
+#install.packages("car")
+#To include the cars package, use the following command:
+library("car")
+```
+
+In the following graph, we plot a scatter plot between the "yrs.since.phd" and salary variables of Salaries data sets. But we will use the other categorical variables to represent the point colors, and shapes of the points to represent another categorical variable.
+
+The salaries data set has the salaries of professors. In the following graph, the rank (or designarion) is represented as different colors of the points of the scatter plots, and the shapes of the points represent the sex another categorical variable.
+
+
+
+```{r}
+ggplot(Salaries, aes(x=yrs.since.phd, y=salary, color=rank,shape=sex)) + geom_point()
+```

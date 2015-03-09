@@ -1,0 +1,127 @@
+---
+title: "MSDA_607_Week_6_Assignment"
+author: "Sekhar Mekala"
+date: "Tuesday, March 03, 2015"
+output: html_document
+---
+
+**Question:** Choose and load any R dataset (except for diamonds!) that has at least two numeric variables and at least two categorical variables.  Identify which variables in your data set are numeric, and which are categorical (factors).
+
+**Answer:** To check all the available data frames, and other objects that were already included in the R installation, use the following command:
+
+```{r}
+data()
+```
+I have chosen "msleep" data frame. This data frame contains the sleep data of mammals. This data frame gets installed with ggplot2 installation. If ggplot2 is not installed, please use the following command to install ggplot2 package:
+
+
+```{r}
+#install.packages("ggplot2")
+#Once the ggplot2 package is installed, use the following command to include the ggplot2 package:
+library("ggplot2")
+```
+
+The ggplot2 package contains the msleep data frame. To check the variable types present in this data frame, use the following command:
+
+
+```{r}
+str(msleep)
+```
+
+In the msleep data frame, the following are categorical variables:
+
+* vore
+
+* conservation
+
+The following are numerical variables:
+
+* sleep_total
+
+* sleep_rem  
+
+* sleep_cycle 
+
+* awake    
+
+* brainwt   
+
+* bodywt     
+
+
+The following are character variables:
+
+* name
+
+* genus
+
+* order
+
+
+**Question: ** Generate summary level descriptive statistics:  Show the mean, median, 25th and 75th quartiles, min, and max for each of the applicable variables in your data set.
+
+**Answer**: We can use the "summary()" function to get the summary information of a data set. For numerical variables the min, max, mean, median, 75th percentile, and 25th percentiles are displayed. For factor type variable, counts of different factors within the factor variables are displayed. For character variables, the max length of the respective character data is displayed.
+
+```{r}
+summary(msleep)
+```
+
+**Question: ** Determine the frequency for one of the categorical variables.  
+
+**Answer**:  To determine the frequency of factors within a categorical variable, we can use the table fucntion. The following code displays the frequency of vore variable in msleep data frame
+
+
+```{r}
+table(msleep$vore)
+
+```
+
+
+**Question: ** Determine the frequency for one of the categorical variables, by a different categorical variable.
+
+**Answer**:  we can use the table function again to get combined frequencies of two categorical variables (below example considers the genus and vore as categorical variables)
+
+
+```{r}
+table(msleep$genus, msleep$vore)
+
+```
+
+**Additional information: ** We can use the prop.table() function to get the proportions. The proportions represent the joint probability distribution of two or more variables. For instance, the following command will process the table generated above, into a probability distribution, between the variables genus and vore:
+
+```{r}
+prop.table(table(msleep$genus, msleep$vore))
+```
+
+We have other useful function called margin.table(), which provides the sum of each of the row data, across the columns or sum of each of the column data across the rows. For example, the following command, uses the above probability distribution between genus and vore variables, and generates the row and column counts.
+
+```{r}
+#Sum of each of the column value, across each row 
+margin.table(prop.table(table(msleep$genus, msleep$vore)),1)
+
+#For better display format, you can use the data frame function as follows:
+data.frame(margin.table(prop.table(table(msleep$genus, msleep$vore)),1))
+
+margin.table(prop.table(table(msleep$genus, msleep$vore)),2)
+
+```
+The last output shows the probability distributions of vore variable. Hence, the three functions table(), prop.table() and margin.table() are very important functions to find the probability distributions (in tabular form). The obtained table object can be converted to a data frame easily (if needed for further analysis)
+
+**Question: ** Create a graph for a single numeric variable.
+**Answer: ** Let us draw the histogram of awake variable of msleep data frame
+```{r}
+ggplot(data=msleep,aes(x=awake)) + 
+  geom_histogram(binwidth=1) +
+  labs(title="Awake Histogram", x="Awake Hours", y="Frequency")
+
+```
+
+**Question: ** Create a scatterplot of two numeric variables
+**Answer: ** Let us consider the variables brainwt and sleep_total variables, and draw a scatter plot to observe the pattern
+
+```{r}
+ggplot(data=msleep,aes(x=(awake),y=(bodywt), color=vore)) + 
+    geom_point(jitter=T,size=3) +
+    labs(title="Brain_wt and Sleep_hours plot", x="Awake_Hours", y="Body_Weight_Pounds")
+
+```
