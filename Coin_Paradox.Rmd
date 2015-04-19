@@ -1,0 +1,101 @@
+---
+title: "Coin_Paradox"
+author: "Sekhar Mekala"
+date: "Sunday, April 05, 2015"
+output: html_document
+---
+
+Three coins are flipped simultaneously (by some person, other than you). If three coins land on Heads, then you will win. But before the coins are flipped, you are given two choices. The first choice states that you can see the outcome of the first flip, and the second choice tells you if any of the three coins has landed in Heads. Which choice do you choose? 
+
+If you choose option 1, then you can see the outcome of the first coin, and if the coin lands on H, then you need to decide if you want to bet on other 2 coins getting two heads. If the first toss is Tails, then you do not place any bet, and it is certain that you will loose. The game host will flip the coin again, till the first coin lands on heads.
+
+If you choose option 2, then you do not get a chance to peek the first coin's outcome, but you will be told if the 3 coin flips have resulted in atlast one head. If the game host declares that there is at least one head, then you have to decide if you want to place the bet of getting all 3 heads.
+
+What should be your strategy? Which choice would you choose (for maximum probabilty)?
+
+Let us simulate this problem. Two functions are written.
+
+The first function "first_heads()" will return a 1, if the first toss results in Head, (followed by 2 Heads). The function will return a 0, if the first toss results in H, but the 2nd or 3rd or both (2 and 3 toss) resulted in Tail. If the first toss is T, then the experiement is repeated, till the first toss results in H.
+
+
+```{r}
+
+set.seed(1234)
+
+first_heads <- function()
+{
+
+#Check if the first toss is a head
+
+repeat{
+x <- sample(0:1,3,replace=T)
+if(x[1] == 1)
+{
+  if(sum(x[2:3]) == 2) return(1)
+  else return(0)
+
+}
+}
+}
+
+mean(replicate(10000,(first_heads())))
+```
+We will win the game with a probability of 0.2468, if we choose option 1.
+
+Let us write another function any_heads(), which checks if any toss (of the three tosses) has resulted in H. If any toss has resulted in heads, then the other 2 toss outputs are checked, and if the other 2 tosses are also Heads, then 1 is returned, else 0 is returned.
+```{r}
+any_heads <- function()
+{
+
+#Check if the first toss is a head
+
+repeat{
+x <- sample(0:1,3,replace=T)
+if(any(x[1:3] == 1))
+{
+  if(sum(x[1:3]) == 3) return(1)
+  else return(0)
+
+}
+}
+}
+
+mean(replicate(10000,(any_heads())))
+```
+
+A probability of 0.1443 is returned.
+Hence it will be better if we choose the first option.
+
+#Here is the theoritical proof:
+
+##If you choose option 1 (peeking the first coin's outcome)
+
+Let H1 denote the event that the first coin lands in H. Now we need to find the probability of getting H on 2nd and 3rd trials, given that the first trial is H1.
+
+**$$P(H2 H3 | H1) = P(H1 H2 H3) / P(H1) $$**
+
+**$$P( H1 H2 H3) = 1/8 $$**
+
+**$$ P(H1) = 1/2 $$**
+
+Therefore, 
+
+**$$P(H2 H3 | H1) = (1/8) / (1/2) = 1/4 $$**
+
+
+
+##If you choose option 2 (knowing that any one coin has landed in Head, not necessarily the first coin)
+
+Let H denote the event that the coin lands in H at least once in 3 trials. Now we need to find the probability of getting all Heads on all the remaining 2 tosses
+
+**$$P(H2 H3 | H) = P(H H2 H3) / P(H) $$**
+
+**$$P( H H2 H3) = 1/8 $$**
+
+**$$ P(H) = 7/8 (Probability of getting at least one Head) $$**
+
+Therefore, 
+
+**$$P(H2 H3 | H) = (1/8) / (7/8) = 1/7 $$**
+
+Hence the first option has greater chance of winning, when compared to the second option.

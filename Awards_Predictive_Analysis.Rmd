@@ -1,0 +1,119 @@
+---
+title: "Awards_Predictive_Analysis"
+author: "Sekhar Mekala"
+date: "Sunday, March 29, 2015"
+output: 
+ ioslides_presentation:
+   widescreen: true
+runtime: shiny
+---
+
+
+
+## Conditional probability model for Best Picture prediction
+
+The main objectives of this data analysis are given below:
+
+* Predict the probability of a picture getting the "Best Picture" award, given the picture is nominated in a specific award category
+
+* Predict the probability of a picture getting the "Best Picture" award, given the picture won the award in a specific category
+
+* Which academy award has the greatest influence on the Best Picture award.
+
+The formula for conditional probability is given below:
+
+<div class="blue">
+**$$P(A|B) = P(B|A) . P(A)/P(B) = P(AB) / P(B)$$**
+</div>
+
+
+```{r, echo=FALSE,results='hide',cache.comments=FALSE,fig.align='center',warning=FALSE,message=FALSE}
+
+#If you get error running this script, install 
+
+#Reading the data from https://docs.google.com/spreadsheets/d/18YAYD2sVvErJziQGt9u2yitSZsjlDOJNuicTly0iaKw/edit?usp=sharing
+
+#install.packages('gsheet')
+
+library(gsheet)
+
+library(dplyr)
+
+library(tidyr)
+
+awards_df <- gsheet2tbl("https://docs.google.com/spreadsheets/d/18YAYD2sVvErJziQGt9u2yitSZsjlDOJNuicTly0iaKw/edit?usp=sharing")
+#head(awards_df)
+
+awards_modified <- awards_df[,c(1,3,4,6)]
+
+awards_modified <- awards_modified %>%
+  group_by(movie_id,year,category_id) %>%
+  summarise(won=max(won))
+
+awards_re_modified <- spread((awards_modified),category_id,won)
+
+award_categories <- unique(data.frame(category_id=awards_df$category_id,category_name=awards_df$category_name))
+rownames(award_categories) <- NULL
+
+#award_categories
+names(awards_re_modified) <- c("movie_id", "year",  "c1",  "c2",  "c3",  "c4",  "c5", "c6",  "c7",  "c8",  "c9", "c10", "c11", "c12",
+                               "c13", "c14", "c15","c16", "c17", "c18", "c19", "c20", "c21", "c22", "c23")
+
+award_categories
+awards_re_modified
+```
+We have the following data frames to use
+* award_categories
+* awards_re_modified
+
+This R Markdown presentation is made interactive using Shiny. The viewers of the presentation can change the assumptions underlying what's presented and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Check box
+```{r, echo=FALSE}
+checkboxGroupInput("Nominated Categories", "Variable:",
+                   c("Cylinders" = "cyl",
+                     "Transmission" = "am",
+                     "Gears" = "gear"))
+
+vec <- as.vector(award_categories$category_name)
+#names(vec) <- paste("c",1:23,sep="")
+
+checkboxGroupInput("Nominated_Categories", "Nominated Categories:",
+                   vec)
+
+```
+## Slide with Interactive Plot
+
+```{r, echo=FALSE}
+inputPanel(
+  selectInput("n_breaks", label = "Number of bins:",
+              choices = c(10, 20, 35, 50), selected = 20),
+  
+  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
+              min = 0.2, max = 2, value = 1, step = 0.2)
+)
+
+renderPlot({
+  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
+       xlab = "Duration (minutes)", main = "Geyser eruption duration")
+  
+  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
+  lines(dens, col = "blue")
+})
+```
+
+## Slide with Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## Slide with R Code and Output
+
+```{r}
+summary(cars)
+```
+
+

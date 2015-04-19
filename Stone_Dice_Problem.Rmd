@@ -1,0 +1,115 @@
+---
+title: "Stone_Dice_Problem"
+author: "Sekhar Mekala"
+date: "Sunday, April 12, 2015"
+output: html_document
+---
+
+Two people A and B have 8 stones and 6 stones respectively. The first person A, rolls a die, and whatever outcome he gets {1,2,3,4,5,6}, he will take those many stones from person B. Then person B rolls a die, and whatever outcome B gets {1,2,3,4,5,6}, he will take those many stones from A.
+
+After each game, who ever has more stones wins the game. If both have the same stones, then the game is repeated. We have to find the probability that B wins the game.
+
+#Solving the problem using Simulation
+```{r}
+
+Stone_Dice_Problem <- function()
+  {
+A <- 8
+B <- 6
+
+
+repeat{
+  
+  x <- sample(1:6,1,rep=T)
+  A <- (A + x)
+  B <- (B - x)
+  
+  x <- sample(1:6,1,rep=T)
+  B <- (B + x)
+  A <- (A - x)  
+  
+  if( A > B)
+    {
+    
+    return(0)
+    
+    }
+  
+   if( A < B)
+    {
+    
+    return(1)
+    
+    }
+    
+}
+
+}
+```
+
+Simulating the experiment 10000 times...
+```{r}
+
+mean(replicate(10000,Stone_Dice_Problem()))
+
+```
+
+
+#Solving the problem theoritically
+
+```{r}
+
+r1 <- c('A','-','B','B','B','B')
+r2 <- c('A','A','-','B','B','B')
+r3 <- c('A','A','A','-','B','B')
+r4 <- c('A','A','A','A','-','B')
+r5 <- c('A','A','A','A','A','-')
+r6 <- c('A','A','A','A','A','A')
+
+df <- rbind(r1,r2,r3,r4,r5,r6)
+df <- data.frame(df)
+names(df) <- c('B1','B2','B3','B4','B5','B6')
+row.names(df) <- c('A1','A2','A3','A4','A5','A6')
+print(df)
+```
+###Fig: 1 - Data frame showing the sample space
+
+In the above data frame display, A1, A2, A3...A6 represent the events that person A gets 1,2,3,...,6 respectively, and B1, B2, B3 ... B6 represent the events that person B gets 1,2,3,...,6 respectively. If an element of the data frame has A, it represents that A wins (for example, [A1,B1] element has A). If an element of the data frame has B, then it represents the event that B wins (for example, [A1,B3] has B). Similarly, if an element of the data frame has "-", then it represents that neither A nor B wins the game...and the game has to be played once more to know the winner.
+
+From Fig-1 (data frame), we can get the following probabilities:
+
+Probability that A wins = P(A) = 21/36
+Probability that B wins = P(B) = 10/36
+Probability that neither A wins nor B wins = P(Draw) = 5/36
+
+For B to win before A, we need the following events to happen:
+
+B Wins in the first game (or) Neither A nor B wins the first game, and B wins the second game (or) Neither A nor B wins in the first 2 games, and B wins the third game ...
+
+Mathematically...
+
+P(B) + P(Draw).P(B) + P(Draw).P(Draw).P(B) + ...
+(10/36) + (5/36) . (10/36) + (5/36) . (5/36). (10/36) + ...
+
+Applying the sum of geometric series formula ...
+
+P(B wins before A) = (10/36)/(1 - 5/36) = (10/36)/(31/36) = 10/31
+
+##Note:
+You may also apply the formula listed in Dobrow book page 74 (as given below).
+
+####A before B
+
+In repeated independent trials, if A dn B are mutually exculsive events, the probability that A occurs before B is
+**$$ \frac{P}{P+Q} $$**
+
+In repeated independent trials, if A dn B are mutually exculsive events, the probability that B occurs before A is
+**$$ \frac{Q}{P+Q} $$**
+
+Where P = probability of event A, and Q = probability of event B
+
+Therefore using the above formula also, the probability that person B wins before person A is:
+ 
+**$$ (\frac{10}{36}) / (\frac{10}{36} + \frac{21}{36}) = 10/31 $$**
+
+Therefore the probability that B wins before A = 10/31

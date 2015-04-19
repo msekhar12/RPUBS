@@ -1,0 +1,61 @@
+library(RCurl)
+my_URL <- getURL("https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub",ssl.verifypeer=FALSE)
+
+
+# reading the content (first 500 lines)
+my_html = readLines(my_URL)
+my_html <- readline(my_URL)
+
+#Read the JSON content embedded in HTML file
+library(XML)
+library(httr)
+
+url <- "https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub"
+
+r <- GET("https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub")
+html <- content(r)
+html
+class(html)
+
+#Convert the html to character data for parsing.
+x <- as(html,"character")
+x
+
+regexpr("<span>",x)[[1]]
+regexpr("</span>",x)[[1]]
+
+y <- substr(x,regexpr("<span>",x)[[1]],(regexpr("</span>",x)[[1]] + nchar("</span>") - 1))
+#Substituting spaces in the place of <br>, <span> and </span>
+y <- gsub(("<br>|<span>|</span>"),"",y,ignore.case=FALSE)
+cat(y)
+
+library(RJSONIO)
+z <- fromJSON(y)
+z$BookName[2]
+
+
+
+nchar(as(html,"character"))
+#install.packages("RTidyHTML")
+#library(RTidyHTML)
+getNodeSet(html)
+
+
+
+library(XML)
+ 
+# Read and parse HTML file
+doc.html = htmlTreeParse(html,
+           useInternal = TRUE)
+ 
+# Extract all the paragraphs (HTML tag is p, starting at
+# the root of the document). Unlist flattens the list to
+# create a character vector.
+doc.text = unlist(xpathApply(doc.html, '//p', xmlValue))
+ 
+# Replace all \n by spaces
+doc.text = gsub('\\n', ' ', doc.text)
+ 
+# Join all the elements of the character vector into a single
+# character string, separated by spaces
+doc.text = paste(doc.text, collapse = ' ')

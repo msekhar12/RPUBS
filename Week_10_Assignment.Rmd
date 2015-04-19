@@ -1,0 +1,225 @@
+---
+title: "Week_10_Assignment"
+author: "Sekhar Mekala"
+date: "Wednesday, April 01, 2015"
+output: html_document
+---
+
+
+
+<span style="color:purple; font-family:Georgia; font-size:2em;">The following code is given in the assignment.</span>
+
+```{r}
+library(XML)
+theURL <- "http://www.jaredlander.com/2012/02/another-kind-of-super-bowl-pool/"
+bowlPool <- readHTMLTable(theURL, which = 1, header = FALSE, stringsAsFactors = FALSE)
+bowlPool
+```
+
+<span style="color:red; font-family:Georgia; font-size:2em;">1. What type of data structure is bowlpool?</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">Answer</span>
+
+```{r}
+class(bowlPool)
+```
+
+Hence the data structure is **data.frame**
+
+<span style="color:red; font-family:Georgia; font-size:2em;">2.Suppose instead you call readHTMLTable() with just the URL argument, against the provided URL, as shown below, What is the type of variable returned in hvalues?</span>
+
+<span style="color:green; font-family:Courier; font-size:1.5em;">
+theURL <- "http://www.w3schools.com/html/html_tables.asp"
+</span>
+
+<span style="color:green; font-family:Courier; font-size:1.5em;">
+hvalues <- readHTMLTable(theURL)
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+```{r}
+theURL <- "http://www.w3schools.com/html/html_tables.asp"
+hvalues <- readHTMLTable(theURL)
+class(hvalues)
+```
+
+Hence the answer is **list** data type
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+3. Write R code that shows how many HTML tables are represented in hvalues
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+To check how many HTML Tables were returned, we can use the **length()** function, as shown below:
+
+```{r}
+length(hvalues)
+```
+
+But sometimes, we may get some NULL values as the output of readHTMLTable() function, if we use this function on a URL directly. For example, in the following command we get a list of tables assigned to hvalues. But this list may have some NULL values.:
+
+```{r}
+theURL <- "http://www.w3schools.com/html/html_tables.asp"
+hvalues <- readHTMLTable(theURL)
+hvalues
+```
+
+The above display shows that hvalues have NULL elements. If the list is really big, then we do not get much information from the display of the list. 
+So instead of displaying the whole list's contents, you can use the following command. If there is at least one NULL element in a list, then the below command displays TRUE.
+
+
+```{r}
+any(lapply(hvalues[seq(hvalues)],is.null))
+```
+
+The above command shows that there is at least one NULL element in the list. But it has also shown a warning message. You can use the following command, to avoid the warning message:
+
+```{r}
+any(data.frame(lapply(hvalues[seq(hvalues)],is.null))==T)
+```
+
+Another way of checking for NULL values is to find the number of NULL values in a list. The following command checks how many NULL values are present in the list. 
+
+
+```{r}
+sum(data.frame(lapply(hvalues[seq(hvalues)],is.null))==T)
+```
+
+The last 3 commands confirm that we have at least one NULL element in the list. 
+
+Finally to get the number of HTML Tables (which are not NULL in the list obtained), use this command:
+
+```{r}
+sum(data.frame(lapply(hvalues[seq(hvalues)],is.null))==F)
+```
+
+**Hence we have 2 tables**
+
+To weed out the NULL elements in the list, you can use the following R Command:
+
+```{r}
+hvalues[which(lapply(hvalues[seq(hvalues)],is.null) == T)] <- NULL
+```
+
+Let us display the hvalues again.
+
+```{r}
+hvalues
+```
+
+The above display confirms that there are NO NULL tables in the list
+
+You can also use the following command to get the number of NULL elements in the list, and this command's output shows that there are no NULL elements in the list.
+
+
+```{r}
+sum(data.frame(lapply(hvalues[seq(hvalues)],is.null))==T)
+```
+
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+4. Modify the readHTMLTable code so that just the table with Number, FirstName, LastName, and Points is returned into a dataframe
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+We know that the first element in the list contains our desired data frame. The following command will get the desired columns:
+
+```{r}
+hvalues <- readHTMLTable(theURL)[[1]]
+hvalues
+```
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+5. Modify the returned data frame so only the Last Name and Points columns are shown.
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+The following R command displays the "Last Name" and "Points" of the hvalues data frame
+
+```{r}
+hvalues <- hvalues[,c("Last Name", "Points")]
+hvalues
+```
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+6. Identify another interesting page on the web with HTML table values. This may be somewhat  tricky, because while HTML tables are great for web-page scrapers, many HTML designers now prefer creating tables using other methods (such as div tags or .png files). </span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+I would like to read the tables present at the following URL:
+
+<span style="color:green; font-family:Georgia; font-size:1em;">
+"http://en.wikipedia.org/wiki/Timeline_of_Indian_history"
+</span>
+
+```{r}
+theURL <- "http://en.wikipedia.org/wiki/Timeline_of_Indian_history"
+hvalues <- readHTMLTable(theURL)
+```
+
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+7. How many HTML tables does that page contain?
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+```{r}
+length(hvalues)
+```
+
+
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+8 Identify your web browser, and describe (in one or two sentences) how you view HTML page source in your web browser.
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+I am using the Internet Explorer (Version 11.0.9600.17691).
+To view the HTML source in Internet Explorer browser, you have to right click on the web page, and select the option "View Source"
+
+
+
+
+<span style="color:red; font-family:Georgia; font-size:2em;">
+9. (Optional challenge exercise)
+Instead of using readHTMLTable from the XML package, use the functionality in the rvest package to perform the same task.  
+Which method do you prefer?  Why might one prefer one package over the other?
+
+</span>
+
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+Answer
+</span>
+
+
+```{r}
+library(rvest)
+library(dplyr)
+theURL <- html("http://en.wikipedia.org/wiki/Timeline_of_Indian_history")
+
+x<- theURL %>% 
+  html_nodes("table")
+
+length(x)
+```
+The last command output displays that we have read 62 tables into x. The main advantage of using rvest is the ability to cascade commands (using dplyr/magrittr packages). 

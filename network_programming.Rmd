@@ -1,0 +1,22 @@
+---
+title: "network_programming"
+author: "Sekhar Mekala"
+date: "Thursday, March 26, 2015"
+output: html_document
+---
+
+#Practice while reading the material from :http://gastonsanchez.com/work/webdata
+
+Assign the web page link which you want to access via your R Code
+```{r}
+r_home <- url("http://www.r-project.org/")
+
+r_home 
+
+```
+To check if a connection is open:
+```{r}
+
+
+```
+

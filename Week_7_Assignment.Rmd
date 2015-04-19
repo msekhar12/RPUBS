@@ -1,0 +1,221 @@
+---
+title: "Week_7_Assignment"
+author: "Sekhar Mekala"
+date: "Wednesday, March 18, 2015"
+output: html_document
+---
+
+# Initial analysis
+We are given the following information:
+
+![alt text](C:\Users\Sekhar\Pictures\Question.png)
+
+**Table 1: Given data in the question**
+
+This table contains the results of a poll conducted at two different cities Edinburgh and Glasgow, under two different age groups. 
+
+
+# Questions and answers
+
+**Question 1**
+Write down 3 questions that you might want to answer based on this data.
+
+**Answer**
+I would like to know the following information from the given data:
+
+* Get the percentage of votes (yes/no) by city, irrespective of the age groups. We would like to see how each city's population has voted.
+* Get the percentage of yes/no, by age group, irrespective of the city
+* Get the precentage of yes/no by age group and by city
+
+**NOTE** A "Yes" vote means, the population prefers Cullen skink and "No" vote means the population prefers Partan bree.
+
+**Question 2**
+Create an R data frame with 2 observations to store this data in its current "messy" state. Use whatever method you want to re-create and/or load the data.
+
+**Answer**
+```{r}
+Edinburgh.Yes <- c(80100,143000)
+Edinburgh.No <- c(35900,214800)
+Glasgow.Yes <- c(99400,150400)
+Glasgow.No <- c(43000,207000)
+
+polls <- data.frame(Edinburgh.Yes = Edinburgh.Yes,Edinburgh.No, Glasgow.Yes, Glasgow.No)
+rownames(polls) <- c('16-24','25+')
+
+polls
+```
+**Figure 1: Data Frame**
+
+**Question 3:**
+Use the functionality in the tidyr package to convert the data frame to be "tidy data."
+
+**Answer**
+The data frame shown in **Figure 1** is certainly a messy data set, due to the following reasons:
+1. The columns Einburgh.Yes, Edinburgh.No, Glasgow.Yes and Glasgow.No are not variables.
+2. The row names "16-24" and "25+" are also not variables.
+
+Let us first fix the usage of constants as row names (2nd issue listed above). 
+To the "polls" data set, let us add a new variable called "Age_Group" with two observations: 16-24 and 25+, and delete the row names.
+
+```{r}
+library(tidyr)
+library(dplyr)
+polls <- mutate(polls,Age_Group=rownames(polls))
+rownames(polls) <- NULL
+
+polls
+```
+The above display of polls data frame shows that there are no row names, and a new variable called Age_Group is added with values 16-24 and 25+. But still the polls data frame is not tidy, since it has four columns Einburgh.No, Glasgow.Yes, Glasgodinburgh.Yes, Edw.No, which are not variables. Let us convert these columns to observations (melting the data set)
+
+```{r}
+polls <- gather(polls,City,Votes,-Age_Group)
+polls
+```
+**Figure 2: Data Frame, after converting the row names as observations**
+
+
+The above display of polls data frame is still not tidy, since the City name is concatenated with the opinion data (Yes/No). We have to separate this data (under the City column into 2 columns: City and the Opinion). The code is shown below:
+
+```{r}
+  polls <- separate(polls,City,into=c("City","Opinion"), sep = "\\.")
+  polls
+```
+
+**Question 4:** Use the functionality in the dplyr package to answer the questions that you asked in step 1.
+
+**Answer**
+* Get the percentage of votes (yes/no) by city, irrespective of the age groups. We would like to see how each city's population has voted.
+
+```{r}
+s_Edinburgh <- sum(polls[polls$City=="Edinburgh",]$Votes)
+s_Glasgow <- sum(polls[polls$City=="Glasgow",]$Votes)
+
+polls_by_city <- summarise(group_by(polls,City, Opinion),Votes=(sum(Votes)))
+
+polls_by_city$Votes[polls_by_city$City=="Edinburgh"] <- (polls_by_city$Votes[polls_by_city$City=="Edinburgh"] / s_Edinburgh)*100
+polls_by_city$Votes[polls_by_city$City=="Glasgow"] <- (polls_by_city$Votes[polls_by_city$City=="Glasgow"] / s_Glasgow)*100
+
+polls_by_city
+
+par(mfrow=c(1,2))
+
+slices <- c(polls_by_city$Votes[polls_by_city$City=="Edinburgh"]) 
+
+lbls <- c("NO", "Yes")
+
+lbls <- paste(lbls, round(slices)) 
+ lbls <- paste(lbls,"%",sep="")  
+ pie(slices,labels = lbls, col=rainbow(length(lbls)),
+    main="Pie Chart of votes in Edinburgh") 
+
+
+slices <- c(polls_by_city$Votes[polls_by_city$City=="Glasgow"]) 
+
+
+
+lbls <- c("No","Yes")
+
+
+lbls <- paste(lbls, round(slices)) 
+ lbls <- paste(lbls,"%",sep="")  
+ pie(slices,labels = lbls, col=rainbow(length(lbls)),
+    main="Pie Chart of votes in Glasgow") 
+```
+
+**Conclusion-1:** Approximately 53% of Edinburgh's population has voted "No", while 47% of Edinburgh's population has voted "Yes"
+
+Approximately 50% of Glasgow's population has voted "Yes" and 50% has voted "No"
+
+In Edinburgh, majority of the people (53%) prefer Partan Bree (since "no" is the majority population's choice.)
+In Glasgow, the votes are divided almost the same (50%) between Partan Bree and Cullen Skink
+
+* Get the percentage of yes/no, by age group, irrespective of the city.
+```{r}
+
+s_16_24_age <- sum(polls[polls$Age_Group=="16-24",]$Votes)
+s_25_age <- sum(polls[polls$Age_Group=="25+",]$Votes)
+
+polls_by_age_group <- summarise(group_by(polls,Age_Group, Opinion),Votes=(sum(Votes)))
+
+polls_by_age_group$Votes[polls_by_age_group$Age_Group == "16-24"] <- (polls_by_age_group$Votes[polls_by_age_group$Age_Group == "16-24"] / s_16_24_age)*100
+polls_by_age_group$Votes[polls_by_age_group$Age_Group == "25+"] <- (polls_by_age_group$Votes[polls_by_age_group$Age_Group == "25+"] / s_25_age)*100
+  
+polls_by_age_group
+
+par(mfrow=c(1,2))
+
+slices <- c(polls_by_age_group$Votes[polls_by_age_group$Age_Group == "16-24"])
+lbls <- c("NO", "Yes")
+
+lbls <- paste(lbls, round(slices)) # add percents to labels 
+ lbls <- paste(lbls,"%",sep="") # ad % to labels 
+ pie(slices,labels = lbls, col=rainbow(length(lbls)),
+    main="16-24 age group support %") 
+
+
+slices <- c(polls_by_age_group$Votes[polls_by_age_group$Age_Group == "25+"])
+lbls <- c("NO", "Yes")
+
+lbls <- paste(lbls, round(slices)) # add percents to labels 
+ lbls <- paste(lbls,"%",sep="") # ad % to labels 
+ pie(slices,labels = lbls, col=rainbow(length(lbls)),
+    main="25+ age group support %") 
+
+
+```
+
+
+**Conclusion-2:** Approximately 41% of 25+ age group has voted for Yes, and 69.5% of 16-24 age group has voted for Yes. Hence the majority of the 25+ age group population has voted "No", while the majority of 16-24 age group population has voted for yes.
+
+Hence 59% of 25+ age group prefer Partan Bree, while in 16-24 age group the majority (69.5%) prefer Cullen Skink. The support/voting pattern changes depending on the age group.
+
+* Get the precentage of yes/no by age group and by city.
+```{r}
+poll_percents <- polls
+poll_percents$Votes[poll_percents$City == "Edinburgh"] <- (poll_percents$Votes[poll_percents$City == "Edinburgh"] / s_Edinburgh) * 100
+poll_percents$Votes[poll_percents$City == "Glasgow"] <- (poll_percents$Votes[poll_percents$City == "Glasgow"] / s_Glasgow) * 100
+poll_percents
+```
+```{r,echo=FALSE}
+#par(mfrow=c(1,2))
+
+slices <- c(poll_percents$Votes[poll_percents$City=="Edinburgh"]) 
+
+lbls <- c("16-24 Yes","25+ Yes", "16-24 No", "25+ No")
+
+lbls <- paste(lbls, round(slices)) 
+ lbls <- paste(lbls,"%",sep="")  
+ pie(slices,labels = lbls, col=rainbow(length(lbls)),
+    main="Edinburgh opinions by age group") 
+
+
+slices <- c(poll_percents$Votes[poll_percents$City=="Glasgow"]) 
+
+lbls <- c("16-24 Yes","25+ Yes", "16-24 No", "25+ No")
+
+lbls <- paste(lbls, round(slices)) 
+ lbls <- paste(lbls,"%",sep="")  
+ pie(slices,labels = lbls, col=rainbow(length(lbls)),
+    main="Glasgow opinions by age grp") 
+
+```
+
+
+**NOTE** Percentages might not add up to 100, due to rounding of decimals.
+
+**Conclusion-3:** We can conclude that in both the cities, approximately 30% of the population in 25+ age group consistently support Yes (I mean they support Cullen Skink), however the majority of the 25+ age group prefer the other candidate. The votes distribution is also approximately same in both the cities, in each group.   
+
+**Question 5**: Having gone through the process, would you ask different questions and/or change the way that you structured your data frame?
+
+**Answer**
+I would like to convert the poll_percents data frame to the following display, using spread() function of tidyr. Such display will help us to compare the votes percentages side by side.
+
+```{r}
+library(tidyr)
+poll_percents$City_Opinion <- paste(poll_percents$City,".",poll_percents$Opinion,sep="")
+poll_percents$City <- NULL
+poll_percents$Opinion <- NULL
+spread(poll_percents,City_Opinion, Votes)
+```
+
+From the above display, approximately 20% of 16-24 age group of Glasgow city's population has voted for Yes, while in Edinburgh, approximately 17% of the same age group's population has voted for Yes. But for 25+ age group, approximately the same percentage(30%) in both the cities have voted Yes. Visually this display will help us to compare the percentages between different cities easily.

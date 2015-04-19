@@ -1,0 +1,220 @@
+---
+title: "MSDA 607 Week 9 Assignment"
+author: "Sekhar Mekala"
+date: "Saturday, March 28, 2015"
+output: html_document
+---
+#HTML, XML, and JSON documents information
+For this assignment, I have created three files, which are listed below (click on the links to open the files). These files were published as google documents. 
+
+* [HTML Table](https://docs.google.com/document/d/1j4Bod6elIm3pvd7qVeRsdLNMxzYsk8IoYBxKQAVTlpw/pub)  - Containing my favourite books in an HTML Table.
+* [XML file](https://docs.google.com/document/d/13rs6sVlmECdLl8vPp7o6cejZRxIgYxkvnjh30XydEH4/pub)    - Containing my favourite books in XML format.
+* [JSON file](https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub)   - Containing my favourite books in JSON format.
+
+Our main **objective** is to parse the above three documents, extract the books information from these documents and tidy the data where ever needed. 
+
+We need the following libraries of R to parse and tidy the above files:
+
+* library(XML)
+* library(RCurl)
+* library(httr)
+* library(dplyr)
+* library(tidyr)
+* library(RJSONIO)
+
+```{r, echo=FALSE,results='hide',cache.comments=FALSE,fig.align='center',warning=FALSE,message=FALSE}
+
+library(XML)
+library(RCurl)
+library(httr)
+library(dplyr)
+library(tidyr)
+library(RJSONIO)
+```
+
+
+#Parsing the [HTML Table](https://docs.google.com/document/d/1j4Bod6elIm3pvd7qVeRsdLNMxzYsk8IoYBxKQAVTlpw/pub):
+
+In order to parse google docs, where the [HTML Table](https://docs.google.com/document/d/1j4Bod6elIm3pvd7qVeRsdLNMxzYsk8IoYBxKQAVTlpw/pub) file is published, we have to use the GET function of httpr package. The readHTML() function is not working to read the data directly from google docs (perhaps, because of the "https" and due to incompatible format). So I am readung the document content to a HTMLInternalDocument object, and converting this object's data to character. The character object data is then fed into the readHTML() function, to display the data frame containing the books information. The code is given below:
+
+##Code to parse the HTML text
+```{r}
+URL <- "https://docs.google.com/document/d/1j4Bod6elIm3pvd7qVeRsdLNMxzYsk8IoYBxKQAVTlpw/pub"
+my_URL <- GET(URL)
+html <- content(my_URL)
+y <- as(html,"character")
+
+readHTMLTable(y, which = 1, stringsAsFactors = FALSE, head=TRUE)
+```
+
+In second row of the above data frame (for the book "Understanding DB2"), there are three authors, and they are separated by semi-colons. This data frame is not "tidy". Let us separate the three authors into three separate rows
+
+```{r}
+y <- readHTMLTable(y, which = 1, stringsAsFactors = FALSE, head=TRUE)
+names(y) <- c("Book_Name","Author","ISBN", "Price")
+
+
+z <- separate(y[y[1]=="Understanding DB2",],Author,into=c("Author_1","Author_2","Author_3"),sep=";")
+
+#Delete the row from y. The deleted row was collected into z, already
+y <- y[-which(y[1]=="Understanding DB2"),]
+
+#Transform the z
+z <- gather(z,Author_no,Author,-Book_Name, -ISBN, -Price)
+z <- data.frame(Book_Name=z$Book_Name,Author=z$Author,ISBN=z$ISBN,Price=z$Price)
+
+#Add rows of z to y
+y <- rbind(y,z)
+
+```
+
+Here is the transformed data frame. 
+
+```{r}
+y
+```
+
+Let us add a new variable to the above data frame, so that we can represent the author number for a book.
+
+```{r}
+a <- group_by(y,Book_Name)
+a <- mutate(a, Author_Number = row_number())
+#y <- data.frame(cbind(Book_Name=b$Book_Name,Author=b$Author,Author_Number=b$Author_Number,ISBN=b$ISBN,Price=a$Price))
+y <- data.frame(list(Book_Name=a$Book_Name,Author=a$Author,Author_Number=a$Author_Number,ISBN=a$ISBN,Price=a$Price))
+y
+```
+
+**Display 1: Data Frame obtained after parsing the [Books HTML Table](https://docs.google.com/document/d/1j4Bod6elIm3pvd7qVeRsdLNMxzYsk8IoYBxKQAVTlpw/pub) published at google documents**
+
+In the above data frame the "Author_Number" variable represents the number of the author (if there are more than one authors for a book). Observe that for the "Understanding DB2" book we have three authors, and each author is assigned an author number, to represent multiple authors.
+
+**NOTE** that the cleanup we performed above (converting multiple authors books to multiple rows is needed again, after we successfully parse the XML and JSON documents). So let us create a function for reusability. The function name will be **"books_transform()"**, and this functions takes the data frame as input and gives a tidied data frame as output
+
+
+##books_transform() function - To tidy the data frame
+```{r}
+books_transform <- function(y)
+  {
+
+z <- separate(y[y[1]=="Understanding DB2",],Author,into=c("Author_1","Author_2","Author_3"),sep=";")
+
+#Delete the row from y. The deleted row was collected into z, already
+y <- y[-which(y[1]=="Understanding DB2"),]
+
+#Transform the z
+z <- gather(z,Author_no,Author,-Book_Name, -ISBN, -Price)
+z <- data.frame(Book_Name=z$Book_Name,Author=z$Author,ISBN=z$ISBN,Price=z$Price)
+
+#Add rows of z to y
+y <- rbind(y,z)  
+  
+  
+a <- group_by(y,Book_Name)
+a <- mutate(a, Author_Number = row_number())
+a <- as.data.frame(a)
+y <- data.frame(list(Book_Name=a$Book_Name,Author=a$Author,Author_Number=a$Author_Number,ISBN=a$ISBN,Price=a$Price))
+
+return(y)
+
+  }
+```
+
+
+
+#Parsing the [XML file](https://docs.google.com/document/d/13rs6sVlmECdLl8vPp7o6cejZRxIgYxkvnjh30XydEH4/pub), and extracting the books information:
+
+In order to parse google docs, where the [XML file](https://docs.google.com/document/d/13rs6sVlmECdLl8vPp7o6cejZRxIgYxkvnjh30XydEH4/pub) file is published, we have to use the GET function of httpr package. We cannot apply the xmlParse function directly, since the XML Code is embedded as text in the webpage. We have to cleanup the html code first, and extract the XML code from the html code. Then the extracted XML ode will be parsed by xmlParse() function. The complete code is given below:
+
+```{r}
+URL <- "https://docs.google.com/document/d/13rs6sVlmECdLl8vPp7o6cejZRxIgYxkvnjh30XydEH4/pub"
+my_URL <- GET(URL)
+html <- content(my_URL)
+y <- as(html,"character")
+
+a <- regexpr("xml version=?",y)[[1]]
+b <- regexpr("/Books&gt;</span>",y)[[1]]
+b <- (b + nchar("/Books&gt;</span>") - 1)
+y <- paste("<?",substr(y,a,b),sep="")
+y <- gsub("&gt;",">",y)
+y <- gsub("&lt;","<",y)
+
+y <- gsub("(<span>|</span>|\n|<p class=\"c0\">|</p>|<p class=\"c1\">)","",y)
+
+#Finally "y" contains the XML code in the form of a character string.
+y
+```
+
+Once the XML string is obtained, let us use the cat() function to verify if the XML is well formed. If you just display the "y" variable (as shown above), which has the XML code, we will get the escape sequence character ("\\") embedded in front of a qutote. Such display will be difficult to read. So the cat() function will help us to display the string without the escape characters.
+
+
+```{r}
+cat(y)
+```
+
+**Extracted XML Code **
+
+Hence we obtained the XML code into the variable "y". Now we can apply XML functions to read the contents of XML data.
+Applying the xmlParse() function to parse the XML present in "y", and this function will throw an error, if the supplied XML is not well formed.
+```{r}
+xmlParse(y)
+```
+**Output of xmlParse() function showing the code as well formed**
+
+The above display confirms that the supplied XML is error free, and now we can apply xmlToDataFrame() function to collect all the child nodes information (in our case study, the books information is present in the child nodes). 
+
+```{r}
+y <- xmlToDataFrame(y)
+y
+books_transform(y)
+```
+**Display 2: Data Frame obtained after parsing the [Books XML file](https://docs.google.com/document/d/13rs6sVlmECdLl8vPp7o6cejZRxIgYxkvnjh30XydEH4/pub) published at google documents**
+
+
+#Parsing the [JSON file](https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub), and extracting the books information:
+
+```{r}
+URL <- "https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub"
+my_URL <- GET(URL)
+html <- content(my_URL)
+y <- as(html,"character")
+
+#regexpr("<span>",y)[[1]]
+#regexpr("</span>",y)[[1]]
+
+y <- substr(y,regexpr("<span>",y)[[1]],(regexpr("</span>",y)[[1]] + nchar("</span>") - 1))
+
+#Substituting spaces in the place of <br>, <span> and </span>
+
+y <- gsub(("<br>|<span>|</span>"),"",y,ignore.case=FALSE)
+
+cat(y)
+```
+
+**Extracted JSON code**
+
+The above display shows the extracted JSON document text from the [JSON file](https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub) located at google documents
+
+Let us parse the extracted JSON document using fromJSON() function. The fromJSON() function outputs a list. The extracted list is converted to data frame, in the following code.
+
+```{r}
+y <- fromJSON(y)
+y <- data.frame(y)
+names(y) <- c("Book_Name","Author","ISBN","Price")
+y
+```
+
+The above display shows how the extracted JSON document text from [JSON file](https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub) located at google documents is finally converted to data frame. Let us apply the books_transform() function to tidy up the data in the above data frame.
+
+```{r}
+books_transform(y)
+```
+**Display 3: Data Frame obtained after parsing the [Books JSON file](https://docs.google.com/document/d/1GbDBIIC5mNI0ufj0GWBj2pwrfNOVideP-ZfpjcB7jL8/pub) published at google documents**
+
+
+#Summary
+* Since the assignment requirement is to create three files (HTML, XML and JSON), successfully parse their content and publish the script in RPUBS.COM, I have to use google documents to publish the HTML, XML and JSON files. This R Mark Down code access these documents directly from google.
+* Since the XML and JSON scripts were published at google documents (in the form of web pages), I had to extract the actual XML and JSON code from the google document's HTML pages.
+* Reading the HTML table was straight forward, using the readHTMLTable() function (since the [HTML Table](https://docs.google.com/document/d/1j4Bod6elIm3pvd7qVeRsdLNMxzYsk8IoYBxKQAVTlpw/pub) was published directly as google document). The readHTMLTable() directly produced a data frame as output.
+* The JSON document was parsed using the fromJSON() function. This function produced an R List, and an extra step data.frame() was needed to convert this list to a data frame
+* The XML document was parsed using xmlParse() and the data from the leaf nodes of XML document was collected using xmlToDataFrame() function. This function (xmlToDataFrame() ) produced a data frame as output.
+* One of the books has 3 authors listed, and each author was separated by semicolons in the text. To make the data frames tidy, a function books_transform() is written. 

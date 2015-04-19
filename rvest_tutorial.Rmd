@@ -1,0 +1,49 @@
+---
+title: "rvest_tutorial"
+author: "Sekhar Mekala"
+date: "Wednesday, April 01, 2015"
+output: html_document
+---
+
+Practice from http://www.r-bloggers.com/rvest-easy-web-scraping-with-r/ tutorial
+
+To install rvest use the following command:
+
+install.packages("rvest")
+
+Let us include the rvest package:
+
+```{r}
+library(rvest)
+```
+
+Our idea is to scrape the movie name information from the following website (as suggested in the tutorial)
+
+
+Open the following website via chrome. Enable selector gadget, selec the movie name (by clicking). If you click once the tag is selected, if you click on the place again, then the selector gadget unselects it. Once you select, copy the tag name
+http://www.imdb.com/title/tt0472043/?ref_=nv_sr_3
+It got ".itemprop" as css selector. This will be supplied as input to html_node(), as follows:
+
+```{r}
+
+apocalypto_movie <- html("http://www.imdb.com/title/tt0472043/?ref_=nv_sr_3")
+
+apocalypto_movie %>% 
+  html_node(".itemprop") %>%
+  html_text() 
+  
+```
+
+Let us scrape something from wiki:
+
+```{r}
+maha <- html("http://en.wikipedia.org/wiki/Mahabharata")
+
+x<-maha %>% 
+  html_nodes("#toc") %>%
+  html_text() 
+  
+cat(x)
+
+
+```

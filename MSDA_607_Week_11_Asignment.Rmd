@@ -1,0 +1,246 @@
+---
+title: "MSDA_607_Week_11_Assignment"
+author: "Sekhar Mekala"
+date: "Saturday, April 18, 2015"
+output: html_document
+---
+
+##The main idea of this assignment is to use the API povided by nytimes.com, obtain the data in some field (like movies, books etc) in the form of json document(s), parse the json data and convert the data into a R Data frame. 
+
+**Step:1** - Create an account in [http://developer.nytimes.com/docs](http://developer.nytimes.com/docs). You may use your Google account or Facebook account.
+
+**Step:2** - create an API Key in the field of your interest. I chose Books API, and obtained the following API key: ae3ebf8d2c14b1623769762cea332b83:0:71863562
+
+##Objective
+The main objective of this project is to obtain the following information on books from nytimes.com website (via API):
+
+* Obtain the list of book names which are popular in various categories 
+
+* Obtain the author information 
+
+* Obtain Amazon URL for the book
+
+* Books Rank
+
+* Published date
+
+
+##Analysis
+
+We will use the following R Packages in this project:
+
+* RCurl
+* jsonlite
+* data.table
+* RJSONIO
+
+**NOTE:** I found that jsonlite is an excellent package to use to parse json documents, when compared to RJSONIO. The RJSONIO package's function (fromJSON()) returns a list of lists (R's list Objects), while jsonlite package's function (fromJSON()) returns a list of data frames. Data frames are easier to handle/process, when compared to lists. Hence I am using jsonlite package. Note that both jsonlite and RJSONIO have the same function fromJSON(), but each package's implementation is different, and output objects are also different. The package "data.table" contains the rbindlist() function which converts a list of elements to a data frame. I had to also use RJSONIO since I was getting error in using the jsonlite's fromJSON() function (The problem with jsonlite package is described later in this document)
+
+If any of the packages are not installed, please use the following command to install the packages:
+
+install.packages(**package_name**)
+
+As per the nytimes.com website, there are several books categories, and we need these category names, in order to obtain books information belonging to those categories. Once the books categories are obtained from nytimes.com, we will iteratively process the categories and obtain the books list via another call to the nytimes.com website.
+
+##Obtaining the books categories:
+
+The URL to obtain books categories is given below:
+
+"http://api.nytimes.com/svc/books/v3/lists/names.json?api-key=xxxxxxxxxx"
+
+The xxxxxxxxxx in the URL must be substituted with API Key, as shown below:
+
+"http://api.nytimes.com/svc/books/v3/lists/names.json?api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562"
+
+The above URL returns a json document, which has various books categories available at nytimes.com website. The R code to get this JSON document is given below:
+
+###R Code to fetch books categories
+```{r}
+
+library(RCurl)
+library(jsonlite)
+
+url <- "http://api.nytimes.com/svc/books/v3/lists/names.json?api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562"
+
+web_data <- getURL(url)
+
+categories_df <- fromJSON(web_data)
+
+lapply(categories_df,head)
+
+```
+
+The above display show that the we obtained 4 data frames, and a close observation of the data tells us that we are interested in "results" data frame of the output.
+
+The "results" data frame has the following columns:
+
+**list_name:** This contains the books categories
+**display_name:** Almost same like list_name
+**list_name_encoded:** This contains the list name to be used in the URL while retrieving the books information in the respective category
+**oldest_published_date:** Available books oldest published date
+**newest_published_date:** Latest published date of the books in the category 
+**updated:** Contains how often the data is updated
+
+The following R code updates the categories_df with just the results data frame
+
+```{r}
+
+categories_df <- categories_df$results
+head(categories_df)
+
+```
+
+Our main processing logic depends on the **list-name-encoded** column of the categories_df data frame. we will iteratively process the results obtained for each book's category by substituting the list-name-encoded in the following URL:
+
+"http://api.nytimes.com/svc/books/v3/lists.json?list-name=xxxxxxxxx&api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562"
+Where xxxxxxxxx in the above URL will be substituted with the elements in "categories_df$list_name_encoded" (one at a time).
+
+Each call returns a JSON document containing the list of all books in the specific category.
+
+##Testing waters
+Just to test the waters, we will fetch only books belonging to one category first. Then we will select the required data and generalize the logic for all the books categories:
+
+###R code to fetch only one book's category
+
+```{r}
+  url <- paste("http://api.nytimes.com/svc/books/v3/lists.json?list-name=",categories_df$list_name_encoded[1],"&api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562",sep="")
+  web_data <- getURL(url)
+  books_df <- fromJSON(web_data)$results
+
+lapply(books_df,head)
+
+```
+
+The above output display all the data frames obtained (related to "Combined Print and E-Book Fiction" category). But most of the required details are present in the "book_details" list. The following code will convert the "book_details" list to a data frame. The other details such as "list_name"" (which represents the category), "bestsellers_date" (ranking date), "published_date" (book published date), rank and amazon_product_url can be obtained as other elements of the list (see the display above).
+
+Extracting all the required details, of a single category, and converting the data to a R data frame:
+
+```{r}
+#books_df <- data.frame(books_df$book_details$title, (books_df$book_details)$author)
+library(data.table)
+
+book_details_df <- data.frame()
+
+
+books_df_temp <- rbindlist(lapply(books_df$book_details,as.list))
+
+book_details_df <- rbind(book_details_df,cbind(books_df$list_name, books_df$bestsellers_date, books_df$published_date, books_df_temp$title, books_df_temp$author, books_df$rank, books_df$amazon_product_url, books_df_temp$primary_isbn10,books_df_temp$primary_isbn13))
+
+names(book_details_df) <- c("Category","Best_Sellers_Date","Published_Date","Title","Author", "Rank","Amazon_URL","Primary_ISBN10", "Primary_ISBN13")
+
+head(book_details_df)
+
+```
+
+##Problem with jsonlite
+The above display confirms that we obtained the needed details for "Combined Print and E-Book Fiction". Now we have to repeat this for all the categories.
+But if the function fromJSON() (from jsonlite) is used iteratively, I was getting the following error.
+
+<span style="color:red; font-family:Georgia; font-size:1em;">
+Quitting from lines 130-159 (MSDA_607_Week_11_Asignment.Rmd)
+Error in parseJSON(txt) : lexical error: invalid character inside string.
+           to maximize business success. ","contributor":"by Peter H.
+                     (right here) ------^
+Calls: <Anonymous> ... eval -> fromJSON -> fromJSON_string -> parseJSON -> .Call
+</span>
+<span style="color:red; font-family:Georgia; font-size:1em;">
+Execution halted
+</span>
+
+The following R code (commented) was throwing the above error. So commenting this code. When fromJSON() function from RJSONIO package is used, I was not getting this error. The code using fromJSON() (of RSJONIO) is shown after the following commented R code
+
+```{r}
+#library(data.table)
+
+#a <- nrow(categories_df)
+
+#book_details_df <- data.frame()
+
+#for (i in 1:a)
+#{
+#  Sys.sleep(1)
+#  
+#  url <- paste("http://api.nytimes.com/svc/books/v3/lists.json?list-name=",categories_df$list_name_encoded[i],"&api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562",sep="")
+#
+#  web_data <- getURL(url)
+#
+#  books_df <- fromJSON(web_data)$results
+#  
+#books_df_temp <- rbindlist(lapply(books_df$book_details,as.list))
+#
+#book_details_df <- rbind(book_details_df,cbind(books_df$list_name, books_df$bestsellers_date, books_df$published_date, books_df_temp$title, books_df_temp$author, books_df$rank, books_df$amazon_product_url, books_df_temp$primary_isbn10,books_df_temp$primary_isbn13))
+  
+#}
+
+
+#names(book_details_df) <- c("Category","Best_Sellers_Date","Published_Date","Title","Author", "Rank","Amazon_URL","Primary_ISBN10", "Primary_ISBN13")
+
+#head(book_details_df)
+#tail(book_details_df)
+#book_details_df
+
+```
+
+
+##Obtaining all books details and getting the final data frame
+Here is the R code to fetch the data related to all books belonging to various categories. 
+
+The following R code produces the final data frame. But this code uses the RSJONI0, instead of jsonlite package.
+
+```{r}
+library(data.table)
+library(RJSONIO)
+
+df <- categories_df
+a <- nrow(df)
+
+books_df <- data.frame()
+ls <- list()
+
+for(b in 1:a)
+{
+  
+  
+  url <- paste("http://api.nytimes.com/svc/books/v3/lists.json?list-name=",df$list_name_encoded[b],"&api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562",sep="")
+  web_data <- getURL(url)
+  ls <- fromJSON(web_data)$results
+  books <- list()
+  
+
+  
+  k <- length(ls)
+  for(i in 1:k)
+  { books$category[i] <- ls[[i]]$list_name
+    books$bestsellers_date[i] <- ls[[i]]$bestsellers_date
+    books$published_date[i] <- ls[[i]]$published_date
+    books$title[i] <- ls[[i]]$book_details[[1]]$title
+    books$author[i] <- ls[[i]]$book_details[[1]]$author
+    books$rank[i] <- ls[[i]]$rank
+    books$amazon_link[i] <- ifelse(is.null(ls[[i]]$amazon_product_url),NA,ls[[i]]$amazon_product_url)
+    books$primary_isbn10[i] <- ls[[i]]$book_details[[1]]$primary_isbn10
+    books$primary_isbn13[i] <- ls[[i]]$book_details[[1]]$primary_isbn13
+    
+  }
+  
+  Sys.sleep(1)
+  
+  books_df <- rbind(books_df,data.frame(books))
+  
+  
+  
+  
+  
+}
+
+names(books_df) <- c("Category","Best_Sellers_Date","Published_Date","Title","Author", "Rank","Amazon_URL","Primary_ISBN10", "Primary_ISBN13")
+head(books_df)
+tail(books_df)
+
+```
+
+##Conclusion
+The above code segments successfully parses all the top ranked books in various categories from nytimes.com website. The jsonlite package is excellent to parse JSON data, but this package's fromJSON() function was failing to parse the data returned by the Books API of the nytimes.com website. So I had to use RJSONIO to process the Books JSON data. The RJSONIO package's fromJSON() returns a list of lists, and I have to inevitably use for loop to parse through the required JSON leaf nodes. The final data frame "books_df" contains all the books details, along with a link to amazon URL. This program can be enhanced further to parse the price information, books ratings from amazon.com. 
+
+<span style="color:blue; font-family:Georgia; font-size:1.5em;">
+                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~End of Project Report~~~~~~~~~~~~~~~~~~~~~~~~~~~
+</span>                                    
