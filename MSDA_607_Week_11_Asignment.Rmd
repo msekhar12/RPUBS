@@ -70,18 +70,25 @@ lapply(categories_df,head)
 
 ```
 
-The above display show that the we obtained 4 data frames, and a close observation of the data tells us that we are interested in "results" data frame of the output.
+The above display shows that the we obtained 4 data frames, and a close observation of the data tells us that we are interested in "results" data frame of the output.
 
 The "results" data frame has the following columns:
 
 **list_name:** This contains the books categories
+
 **display_name:** Almost same like list_name
+
 **list_name_encoded:** This contains the list name to be used in the URL while retrieving the books information in the respective category
+
 **oldest_published_date:** Available books oldest published date
+
 **newest_published_date:** Latest published date of the books in the category 
+
 **updated:** Contains how often the data is updated
 
-The following R code updates the categories_df with just the results data frame
+
+
+The following R code updates the "categories_df" with just the results data frame
 
 ```{r}
 
@@ -90,10 +97,10 @@ head(categories_df)
 
 ```
 
-Our main processing logic depends on the **list-name-encoded** column of the categories_df data frame. we will iteratively process the results obtained for each book's category by substituting the list-name-encoded in the following URL:
+Our main processing logic depends on the **list-name-encoded** column of the **categories_df** data frame. We will iteratively process the results obtained for each book's category by substituting the **list-name-encoded** in the following URL:
 
 "http://api.nytimes.com/svc/books/v3/lists.json?list-name=xxxxxxxxx&api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562"
-Where xxxxxxxxx in the above URL will be substituted with the elements in "categories_df$list_name_encoded" (one at a time).
+Where xxxxxxxxx in the above URL will be substituted with the elements in **"categories_df$list_name_encoded"** (one at a time).
 
 Each call returns a JSON document containing the list of all books in the specific category.
 
@@ -111,7 +118,7 @@ lapply(books_df,head)
 
 ```
 
-The above output display all the data frames obtained (related to "Combined Print and E-Book Fiction" category). But most of the required details are present in the "book_details" list. The following code will convert the "book_details" list to a data frame. The other details such as "list_name"" (which represents the category), "bestsellers_date" (ranking date), "published_date" (book published date), rank and amazon_product_url can be obtained as other elements of the list (see the display above).
+The above output display all the data frames obtained (related to "Combined Print and E-Book Fiction" category). But most of the required details are present in the "book_details" list. The following code will convert the "book_details" list to a data frame. The other details such as "list_name"" (which represents the category), "bestsellers_date" (ranking date), "published_date" (book published date), "rank" (book's rank in the respective category) and "amazon_product_url" (URL to amazon link, where the product is listed) can be obtained as other elements of the list (see the display above).
 
 Extracting all the required details, of a single category, and converting the data to a R data frame:
 
@@ -161,8 +168,8 @@ The following R code (commented) was throwing the above error. So commenting thi
 #  Sys.sleep(1)
 #  
 #  url <- paste("http://api.nytimes.com/svc/books/v3/lists.json?list-name=",categories_df$list_name_encoded[i],"&api-key=ae3ebf8d2c14b1623769762cea332b83:0:71863562",sep="")
-#
 #  web_data <- getURL(url)
+#
 #
 #  books_df <- fromJSON(web_data)$results
 #  
@@ -239,8 +246,8 @@ tail(books_df)
 ```
 
 ##Conclusion
-The above code segments successfully parses all the top ranked books in various categories from nytimes.com website. The jsonlite package is excellent to parse JSON data, but this package's fromJSON() function was failing to parse the data returned by the Books API of the nytimes.com website. So I had to use RJSONIO to process the Books JSON data. The RJSONIO package's fromJSON() returns a list of lists, and I have to inevitably use for loop to parse through the required JSON leaf nodes. The final data frame "books_df" contains all the books details, along with a link to amazon URL. This program can be enhanced further to parse the price information, books ratings from amazon.com. 
+The above code segments successfully parses all the top ranked books details in various categories from nytimes.com website. The jsonlite package is excellent to parse JSON data, but this package's fromJSON() function was failing to parse the data returned by the Books API of the nytimes.com website. So I had to use RJSONIO to process the Books JSON data. The RJSONIO package's fromJSON() returns a list of lists, and I have to inevitably use "for loop"" to parse through the required JSON leaf nodes. The final data frame "books_df" contains all the books details, along with a link to amazon URL. This program can be enhanced further to parse the price information, books ratings from amazon.com. 
 
-<span style="color:blue; font-family:Georgia; font-size:1.5em;">
-                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~End of Project Report~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<span style="color:blue; font-family:Georgia; font-size:2em;">
+                                                         -~-End of Project Report-~- 
 </span>                                    
