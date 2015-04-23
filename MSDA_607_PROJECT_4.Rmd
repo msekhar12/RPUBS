@@ -13,20 +13,21 @@ Specifically here are the requirements of this project:
 1. Parse the first page blog entries present at "http://www.r-bloggers.com/search/web%20scraping" and output a data frame named first_page_df, with three variables: 
   **title, date and author**. Generalize this logic to any web page returned when a key word search is made at "http://www.r-bloggers.com""
 
-2. Get the number of pages obtained as the search results in "http://www.r-bloggers.com/search/web%20scraping", parse each page of the search results, and build a data frame all_pages_df, with three variables: **title, date and author**. Generalize this logic to any web page returned when a key word search is made at "http://www.r-bloggers.com"
+2. Get the number of pages obtained as the search results in "http://www.r-bloggers.com/search/web%20scraping". Generalize this logic to any web page returned when a key word search is made at "http://www.r-bloggers.com"
 
-3. Generalize the program logic, and let the user enter a search string. The program should return the results in the form of a data frame with three variables: **title, date and author**
+3. Generalize the program logic, and let the user enter a search string. The program should return all the search results (from all the pages returned) in the form of a data frame with three variables: **title, date and author**
 
 
 ##Design
 We will develop the following R functions to support the above objectives:
-* scrape_html(url) 
+
+* **scrape_html(url)** 
 This function takes a URL as input and outputs the data frame containing the blog's title, date (when the blog was posted) and the blog's author. 
 
-* max_pages(html_txt)
-This function takes HTML Text (obtained from www.r-bloggers.com, whenever a search is made at this web site), parses the text, and outputs the number of pages returned as search results
+* **max_pages(html_txt)**
+This function takes HTML Text (obtained from www.r-bloggers.com, whenever a search is made at this web site), parses the text, and outputs the number of pages returned as search result
 
-* search_Rbloggers(search_keywords)
+* **search_Rbloggers(search_keywords)**
 This function takes character string as input, searches the text at www.r-bloggers.com website, and gives a data frame containing the blog's title, date (when the blog was posted) and the blog's author. This function calls the other two functions scrape_html() and max_pages()
 
 ##Required R packages

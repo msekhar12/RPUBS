@@ -69,20 +69,21 @@ img {
 
 <div id="objective" class="section level2">
 <h2>Objective</h2>
-<p>The main objective of this poject is to parse the blog entries present at the web site “<a href="http://www.r-bloggers.com/search/web%20scraping">http://www.r-bloggers.com/search/web%20scraping</a>” (This web site contains the search results obtained when “web scraping” is searched at “<a href="http://www.r-bloggers.com" class="uri">http://www.r-bloggers.com</a>”).</p>
-<p>Speifically here are the requirements of this project:</p>
+<p>The main objective of this project is to parse the blog entries present at the web site “<a href="http://www.r-bloggers.com/search/web%20scraping">http://www.r-bloggers.com/search/web%20scraping</a>” (This web site contains the search results obtained when “web scraping” is searched at “<a href="http://www.r-bloggers.com" class="uri">http://www.r-bloggers.com</a>”. But we will write a generic R function to search any key word(s) at “r-bloggers.com” website).</p>
+<p>Specifically here are the requirements of this project:</p>
 <ol style="list-style-type: decimal">
-<li><p>Parse the first page blog entries present at “<a href="http://www.r-bloggers.com/search/web%20scraping">http://www.r-bloggers.com/search/web%20scraping</a>” and output a data frame named first_page_df, with three variables: <strong>title, date and author</strong></p></li>
-<li><p>Get the number of pages obtained as the search results in “<a href="http://www.r-bloggers.com/search/web%20scraping">http://www.r-bloggers.com/search/web%20scraping</a>”, parse each page of the search results, and build a data frame all_pages_df, with three variables: <strong>title, date and author</strong></p></li>
-<li><p>Generalize the program logic, and let the user enter a search string. The program should return the results in the form of a data frame with three variables: <strong>title, date and author</strong></p></li>
+<li><p>Parse the first page blog entries present at “<a href="http://www.r-bloggers.com/search/web%20scraping">http://www.r-bloggers.com/search/web%20scraping</a>” and output a data frame named first_page_df, with three variables: <strong>title, date and author</strong>. Generalize this logic to any web page returned when a key word search is made at “<a href="http://www.r-bloggers.com" class="uri">http://www.r-bloggers.com</a>”&quot;</p></li>
+<li><p>Get the number of pages obtained as the search results in “<a href="http://www.r-bloggers.com/search/web%20scraping">http://www.r-bloggers.com/search/web%20scraping</a>”. Generalize this logic to any web page returned when a key word search is made at “<a href="http://www.r-bloggers.com" class="uri">http://www.r-bloggers.com</a>”</p></li>
+<li><p>Generalize the program logic, and let the user enter a search string. The program should return all the search results (from all the pages returned) in the form of a data frame with three variables: <strong>title, date and author</strong></p></li>
 </ol>
 </div>
 <div id="design" class="section level2">
 <h2>Design</h2>
-<p>We will develop the following R functions to support the above objectives: * scrape_html(url) This function takes a URL as input and outputs the data frame containing the blog’s title, date (when the blog was posted) and the blog’s author.</p>
+<p>We will develop the following R functions to support the above objectives:</p>
 <ul>
-<li><p>max_pages(html_txt) This function takes HTML Text (obtained from www.r-bloggers.com, whenever a search is made at this web site), parses the text, and outputs the number of pages returned as search results</p></li>
-<li><p>search_Rbloggers(search_keywords) This function takes character string as input, searches the text at www.r-bloggers.com website, and gives a data frame containing the blog’s title, date (when the blog was posted) and the blog’s author. This function calls the other two functions scrape_html() and max_pages()</p></li>
+<li><p><strong>scrape_html(url)</strong> This function takes a URL as input and outputs the data frame containing the blog’s title, date (when the blog was posted) and the blog’s author.</p></li>
+<li><p><strong>max_pages(html_txt)</strong> This function takes HTML Text (obtained from www.r-bloggers.com, whenever a search is made at this web site), parses the text, and outputs the number of pages returned as search result</p></li>
+<li><p><strong>search_Rbloggers(search_keywords)</strong> This function takes character string as input, searches the text at www.r-bloggers.com website, and gives a data frame containing the blog’s title, date (when the blog was posted) and the blog’s author. This function calls the other two functions scrape_html() and max_pages()</p></li>
 </ul>
 </div>
 <div id="required-r-packages" class="section level2">
@@ -96,7 +97,7 @@ img {
 </div>
 <div id="code-implementation" class="section level2">
 <h2>Code Implementation</h2>
-<p>The following R Code creates a function named “scrape_html()”. It takes a URL as input, gets the html page associated to the URL and obtains the “h2”, “.meta” and “.date” HTML elements data. This function works correctly for the URL obtained whenever any keyword(s) search is made at www.r-bloggers.com website. If this code is used for any other website, you may see some unexpected results. In order to identify the “h2”, “.meta”, and “.date” elements, I opened the “www.r-bloggers.com/search/web%20scraping” in google chrome, enabled the selector gadget, and selected and unselected the required elements on the page.</p>
+<p>The following R Code creates a function named “scrape_html()”. It takes a URL as input, gets the html page associated to the URL and obtains the “h2”, “.meta” and “.date” HTML elements data. This function works correctly for the URL obtained whenever any keyword(s) search is made at www.r-bloggers.com website. If this code is used for any other website, you may see some unexpected results. In order to identify the “h2”, “.meta”, and “.date” elements, I opened the “www.r-bloggers.com/search/web%20scraping” in Google chrome, enabled the selector gadget, and selected and un-selected the required elements on the page.</p>
 <div id="the-r-code-for-scrape_html-function-is-given-below" class="section level3">
 <h3>The R code for “scrape_html()” function is given below:</h3>
 <pre class="r"><code>scrape_html &lt;- function(url)
@@ -185,7 +186,7 @@ return(as.numeric(strsplit(p,&quot;of &quot;)[[1]][2]))
 </div>
 <div id="the-r-code-for-search_rbloggers-function-is-given-below" class="section level3">
 <h3>The R code for “search_Rbloggers()” function is given below:</h3>
-<p>The R code to parse all the pages returned when any key word is searched, is given below. This fuction takes a search string as input and returns a data frame with three variables:<strong>title, date and author</strong>. A call to this fuction with “web scraping” as input returns all the search results of “web scraping”, in the form of a data frame (with details: <strong>title, date and author</strong>)</p>
+<p>The R code to parse all the pages returned when any key word is searched, is given below. This function takes a search string as input and returns a data frame with three variables:<strong>title, date and author</strong>. A call to this function with “web scraping” as input returns all the search results of “web scraping”, in the form of a data frame (with details: <strong>title, date and author</strong>)</p>
 <pre class="r"><code>search_Rbloggers &lt;- function(str)
   {
   
@@ -224,7 +225,7 @@ for(i in 2:p)
 
 return(all_pages_df)
 }</code></pre>
-<p>Calling the searh_Rbloggers() function with “web scraping” as input. You can call the function if you want to search any key word(s).</p>
+<p>Calling the search_Rbloggers() function with “web scraping” as input. You can call the function if you want to search any key word(s).</p>
 <p><strong>NOTE:</strong> This function call satisfies the <strong>objective-3</strong> of our project : “Generalize the program logic, and let the user enter a search string. The program should return the results in the form of a data frame with three variables: <strong>title, date and author</strong>”</p>
 <pre class="r"><code>df_temp &lt;- search_Rbloggers(&quot;web scraping&quot;)
 print(data.frame(df_temp),right=FALSE)</code></pre>
